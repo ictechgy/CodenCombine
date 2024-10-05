@@ -26,10 +26,9 @@ public extension Publishers {
                 .map { LatestDataType.upstreamData($0) }
             
             let anotherUpstreamElementHolder = anotherUpstream
-                .scan(Optional<LatestDataType>.none) { LatestDataType.anotherUpstreamData($1) }
-                .compactMap { $0 }
-                
-            Publishers.Zip(upstreamElementHolder, anotherUpstreamElementHolder)
+                .map { LatestDataType.anotherUpstreamData($1) }
+            
+            Publishers.CombineLatest(upstreamElementHolder, anotherUpstreamElementHolder)
                 .compactMap { upstreamDataType, anotherUpstreamDataType in
                     switch (upstreamDataType, anotherUpstreamDataType) {
                     case (.upstreamData(let upstreamOutput), .anotherUpstreamData(let anotherUpstreamOutput)):
