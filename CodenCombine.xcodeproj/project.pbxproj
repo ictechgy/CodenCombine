@@ -7,10 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1DAADC0A2CB11B4F00F5B6ED /* libCodenCombine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C9776A4E2CAE882D00788589 /* libCodenCombine.a */; };
 		C90E31272CAEAACA007E7499 /* libCodenCombine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C9776A4E2CAE882D00788589 /* libCodenCombine.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		1DAADC0B2CB11B4F00F5B6ED /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C9776A462CAE882D00788589 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C9776A4D2CAE882D00788589;
+			remoteInfo = CodenCombine;
+		};
 		C90E31282CAEAACA007E7499 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = C9776A462CAE882D00788589 /* Project object */;
@@ -33,6 +41,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1DAADC062CB11B4F00F5B6ED /* CodenCombineUnitTest.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CodenCombineUnitTest.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C90E31112CAEAA6E007E7499 /* TestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9776A4E2CAE882D00788589 /* libCodenCombine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCodenCombine.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -48,6 +57,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		1DAADC072CB11B4F00F5B6ED /* CodenCombineUnitTest */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CodenCombineUnitTest;
+			sourceTree = "<group>";
+		};
 		C90E31122CAEAA6E007E7499 /* TestApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -64,6 +78,14 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1DAADC032CB11B4F00F5B6ED /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1DAADC0A2CB11B4F00F5B6ED /* libCodenCombine.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C90E310E2CAEAA6E007E7499 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -94,6 +116,7 @@
 			children = (
 				C9776A502CAE882D00788589 /* CodenCombine */,
 				C90E31122CAEAA6E007E7499 /* TestApp */,
+				1DAADC072CB11B4F00F5B6ED /* CodenCombineUnitTest */,
 				C90E31262CAEAACA007E7499 /* Frameworks */,
 				C9776A4F2CAE882D00788589 /* Products */,
 			);
@@ -104,6 +127,7 @@
 			children = (
 				C9776A4E2CAE882D00788589 /* libCodenCombine.a */,
 				C90E31112CAEAA6E007E7499 /* TestApp.app */,
+				1DAADC062CB11B4F00F5B6ED /* CodenCombineUnitTest.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -111,6 +135,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		1DAADC052CB11B4F00F5B6ED /* CodenCombineUnitTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DAADC0F2CB11B4F00F5B6ED /* Build configuration list for PBXNativeTarget "CodenCombineUnitTest" */;
+			buildPhases = (
+				1DAADC022CB11B4F00F5B6ED /* Sources */,
+				1DAADC032CB11B4F00F5B6ED /* Frameworks */,
+				1DAADC042CB11B4F00F5B6ED /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1DAADC0C2CB11B4F00F5B6ED /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1DAADC072CB11B4F00F5B6ED /* CodenCombineUnitTest */,
+			);
+			name = CodenCombineUnitTest;
+			packageProductDependencies = (
+			);
+			productName = CodenCombineUnitTest;
+			productReference = 1DAADC062CB11B4F00F5B6ED /* CodenCombineUnitTest.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		C90E31102CAEAA6E007E7499 /* TestApp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C90E31232CAEAA6F007E7499 /* Build configuration list for PBXNativeTarget "TestApp" */;
@@ -166,6 +213,9 @@
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					1DAADC052CB11B4F00F5B6ED = {
+						CreatedOnToolsVersion = 16.0;
+					};
 					C90E31102CAEAA6E007E7499 = {
 						CreatedOnToolsVersion = 16.0;
 					};
@@ -190,11 +240,19 @@
 			targets = (
 				C9776A4D2CAE882D00788589 /* CodenCombine */,
 				C90E31102CAEAA6E007E7499 /* TestApp */,
+				1DAADC052CB11B4F00F5B6ED /* CodenCombineUnitTest */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1DAADC042CB11B4F00F5B6ED /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C90E310F2CAEAA6E007E7499 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -205,6 +263,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1DAADC022CB11B4F00F5B6ED /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C90E310D2CAEAA6E007E7499 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -222,6 +287,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		1DAADC0C2CB11B4F00F5B6ED /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C9776A4D2CAE882D00788589 /* CodenCombine */;
+			targetProxy = 1DAADC0B2CB11B4F00F5B6ED /* PBXContainerItemProxy */;
+		};
 		C90E31292CAEAACA007E7499 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = C9776A4D2CAE882D00788589 /* CodenCombine */;
@@ -230,6 +300,36 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		1DAADC0D2CB11B4F00F5B6ED /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = coden.CodenCombineUnitTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1DAADC0E2CB11B4F00F5B6ED /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = coden.CodenCombineUnitTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		C90E31242CAEAA6F007E7499 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -434,6 +534,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1DAADC0F2CB11B4F00F5B6ED /* Build configuration list for PBXNativeTarget "CodenCombineUnitTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DAADC0D2CB11B4F00F5B6ED /* Debug */,
+				1DAADC0E2CB11B4F00F5B6ED /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C90E31232CAEAA6F007E7499 /* Build configuration list for PBXNativeTarget "TestApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
