@@ -6,6 +6,7 @@
 //
 
 import Combine
+import Foundation
 
 public extension Publisher {
     func withLatestFrom<AnotherUpstream>(_ anotherUpstream: AnotherUpstream) -> Publishers.WithLatestFrom<Self, AnotherUpstream> where AnotherUpstream: Publisher, Failure == AnotherUpstream.Failure {
@@ -22,29 +23,58 @@ public extension Publishers {
         let anotherUpstream: AnotherUpstream
         
         public func receive<S>(subscriber: S) where S : Subscriber, Upstream.Failure == S.Failure, S.Input == Output {
-            let upstreamElementHolder = upstream
-                .map { LatestDataType.upstreamData($0) }
-            
-            let anotherUpstreamElementHolder = anotherUpstream
-                .map { LatestDataType.anotherUpstreamData($1) }
-            
-            Publishers.CombineLatest(upstreamElementHolder, anotherUpstreamElementHolder)
-                .compactMap { upstreamDataType, anotherUpstreamDataType in
-                    switch (upstreamDataType, anotherUpstreamDataType) {
-                    case (.upstreamData(let upstreamOutput), .anotherUpstreamData(let anotherUpstreamOutput)):
-                        return (upstreamOutput, anotherUpstreamOutput)
-                    default:
-                        return nil
-                    }
-                }
-                .subscribe(subscriber)
+            let subscription = WithLatestFromSubscription(upstream: upstream, anotherUpstream: anotherUpstream, subscriber: subscriber)
+            subscriber.receive(subscription: subscription)
         }
     }
 }
 
 extension Publishers.WithLatestFrom {
-    private enum LatestDataType {
-        case upstreamData(Upstream.Output)
-        case anotherUpstreamData(AnotherUpstream.Output)
+    final class WithLatestFromSubscription<S: Subscriber>: Subscription where Upstream.Failure == AnotherUpstream.Failure, S.Input == (Upstream.Output, AnotherUpstream.Output), S.Failure == Upstream.Failure {
+        
+        private let recursiveLock = NSRecursiveLock()
+        private var latestData: AnotherUpstream.Output?
+        private var cancellable = Set<AnyCancellable>()
+        
+        init(upstream: Upstream, anotherUpstream: AnotherUpstream, subscriber: S) {
+            anotherUpstream
+                .withUnretained(self)
+                .sink { [weak self] in
+                    subscriber.receive(completion: $0)
+                    self?.cancel()
+                } receiveValue: { subscriptionSelf, output in
+                    subscriptionSelf.recursiveLock.lock()
+                    subscriptionSelf.latestData = output
+                    subscriptionSelf.recursiveLock.unlock()
+                }
+                .store(in: &cancellable)
+            
+            upstream
+                .withUnretained(self)
+                .sink { [weak self] in
+                    subscriber.receive(completion: $0)
+                    self?.cancel()
+                } receiveValue: { subscriptionSelf, output in
+                    subscriptionSelf.recursiveLock.lock()
+                    
+                    if let latestData = subscriptionSelf.latestData {
+                        _ = subscriber.receive((output, latestData))
+                    }
+                    
+                    subscriptionSelf.recursiveLock.unlock()
+                }
+                .store(in: &cancellable)
+        }
+        
+        func request(_ demand: Subscribers.Demand) {
+            // do nothing on demand request..
+        }
+        
+        func cancel() {
+            recursiveLock.lock()
+            latestData = nil
+            cancellable.removeAll()
+            recursiveLock.unlock()
+        }
     }
 }
