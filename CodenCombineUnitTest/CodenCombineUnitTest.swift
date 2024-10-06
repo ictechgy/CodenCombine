@@ -24,29 +24,36 @@ final class CodenCombineUnitTest: XCTestCase {
     func test_withLatestFrom은_하나의_Publisher_Element가오면_다른_Publisher의_마지막_Element를_같이_전달한다() {
         // given
         let climberMonologue = PassthroughSubject<String, Never>()
-        let numberOfProblemsBrokenByClimber = PassthroughSubject<Int, Never>()
+        let numberOfProblemsSolvedNotTotal = PassthroughSubject<Int, Never>()
         
-        var speechOfClimber: String?
-        var numberOfProblemsBroken: Int?
+        var totalCountOfSpeech = 0
+        var latestSpeechOfClimber: String?
+        var totalNumberOfProblemsBroken = 0
+        var lastNumberOfProlblemBroken = -1
         
-        climberMonologue.withLatestFrom(numberOfProblemsBrokenByClimber)
+        climberMonologue.withLatestFrom(numberOfProblemsSolvedNotTotal)
             .sink { liveSpeechOfClimber, liveNumberOfProblemsBroken in
-                speechOfClimber = liveSpeechOfClimber
-                numberOfProblemsBroken = liveNumberOfProblemsBroken
+                totalCountOfSpeech += 1
+                latestSpeechOfClimber = liveSpeechOfClimber
+                totalNumberOfProblemsBroken += liveNumberOfProblemsBroken
+                lastNumberOfProlblemBroken = liveNumberOfProblemsBroken
             }
             .store(in: &cancellables)
         
         // when
+        numberOfProblemsSolvedNotTotal.send(1)
         climberMonologue.send("🔴 빨강 한문제 깼다!")
-        numberOfProblemsBrokenByClimber.send(1)
         
+        numberOfProblemsSolvedNotTotal.send(1)
         climberMonologue.send("🔵 파랑 한문제 깼다!")
-        numberOfProblemsBrokenByClimber.send(2)
         
+        numberOfProblemsSolvedNotTotal.send(0)
         climberMonologue.send("🟣 아쉽게 보라는 못깼네 🥲")
         
         // then
-        XCTAssertEqual(speechOfClimber, "🟣 아쉽게 보라는 못깼네 🥲")
-        XCTAssertEqual(numberOfProblemsBroken, 2)
+        XCTAssertEqual(totalCountOfSpeech, 3)
+        XCTAssertEqual(totalNumberOfProblemsBroken, 2)
+        XCTAssertEqual(latestSpeechOfClimber, "🟣 아쉽게 보라는 못깼네 🥲")
+        XCTAssertEqual(lastNumberOfProlblemBroken, 0)
     }
 }
