@@ -30,26 +30,18 @@ public struct MainScheduler: Scheduler {
     
     // FIXME: 재귀 방어 필요
     public func schedule(options: DispatchQueue.SchedulerOptions?, _ action: @escaping () -> Void) {
-        if DispatchQueue.main.id == DispatchQueue.currentRunningQueueId && alwaysAync == false {
-            ImmediateScheduler.shared.schedule(action)
+        if DispatchQueue.isCurrentQueueMain && alwaysAync == false {
+            action()
         } else {
             DispatchQueue.main.schedule(options: options, action)
         }
     }
     
     public func schedule(after date: DispatchQueue.SchedulerTimeType, tolerance: DispatchQueue.SchedulerTimeType.Stride, options: DispatchQueue.SchedulerOptions?, _ action: @escaping () -> Void) {
-        if DispatchQueue.main.id == DispatchQueue.currentRunningQueueId && alwaysAync == false {
-            ImmediateScheduler.shared.schedule(after: date, tolerance: tolerance, options: options, action)
-        } else {
-            DispatchQueue.main.schedule(after: date, tolerance: tolerance, options: options, action)
-        }
+        DispatchQueue.main.schedule(after: date, tolerance: tolerance, options: options, action)
     }
     
     public func schedule(after date: DispatchQueue.SchedulerTimeType, interval: DispatchQueue.SchedulerTimeType.Stride, tolerance: DispatchQueue.SchedulerTimeType.Stride, options: DispatchQueue.SchedulerOptions?, _ action: @escaping () -> Void) -> any Cancellable {
-        if DispatchQueue.main.id == DispatchQueue.currentRunningQueueId && alwaysAync == false {
-            ImmediateScheduler.shared.schedule
-        } else {
-            DispatchQueue.main.schedule(options: options, action)
-        }
+        DispatchQueue.main.schedule(after: date, interval: interval, tolerance: tolerance, options: options, action)
     }
 }
