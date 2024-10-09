@@ -44,6 +44,13 @@ final class ViewController: UIViewController {
                 print("scan 확인 \(number)")
             }
             .store(in: &cancellables)
+        
+        Just(1000)
+            .observe(on: DispatchQueue.main)
+            .sink { _ in
+                print("이거 잘 될까??")
+            }
+            .store(in: &cancellables)
     }
     
     deinit {
