@@ -69,9 +69,9 @@ extension Publishers.ObserveOn {
 }
 
 extension DispatchQueue {
-    public static let defaultKey = DispatchSpecificKey<UUID>()
+    private static let defaultKey = DispatchSpecificKey<UUID>()
     
-    public var id: UUID {
+    var id: UUID {
         if let uuid = getSpecific(key: Self.defaultKey) {
             return uuid
         } else {
@@ -81,7 +81,7 @@ extension DispatchQueue {
         }
     }
     
-    public static var currentRunningQueueId: UUID? {
+    static var currentRunningQueueId: UUID? {
         getSpecific(key: Self.defaultKey)
     }
 }
