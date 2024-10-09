@@ -61,9 +61,14 @@ extension Publishers.ObserveOn {
             return .none
         }
         
-        // FIXME: 같이 적용 필요
         func receive(completion: Subscribers.Completion<Upstream.Failure>) {
-            downstream.receive(completion: completion)
+            if dispatchQueue.id == DispatchQueue.currentRunningQueueId {
+                downstream.receive(completion: completion)
+            } else {
+                dispatchQueue.async {
+                    self.downstream.receive(completion: completion)
+                }
+            }
         }
     }
 }
