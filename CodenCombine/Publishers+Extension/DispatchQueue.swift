@@ -23,4 +23,8 @@ extension DispatchQueue {
     static var currentRunningQueueId: UUID? {
         getSpecific(key: Self.defaultKey)
     }
+    
+    static var isCurrentQueueMain: Bool {
+        DispatchQueue.main.id == currentRunningQueueId
+    }
 }
