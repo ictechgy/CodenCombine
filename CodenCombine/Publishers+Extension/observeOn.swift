@@ -39,6 +39,8 @@ extension Publishers.ObserveOn {
         private let downstream: DownStream
         private let dispatchQueue: DispatchQueue
         
+        private let lock = NSRecursiveLock()
+        
         init(downstream: DownStream, dispatchQueue: DispatchQueue) {
             self.downstream = downstream
             self.dispatchQueue = dispatchQueue
@@ -48,10 +50,10 @@ extension Publishers.ObserveOn {
             downstream.receive(subscription: subscription)
         }
         
-        // FIXME: - atomic 변수로 무한재귀 방어 필요
         func receive(_ input: Upstream.Output) -> Subscribers.Demand {
-            if dispatchQueue.id == DispatchQueue.currentRunningQueueId {
+            if dispatchQueue.id == DispatchQueue.currentRunningQueueId, lock.try() {
                 _ = downstream.receive(input)
+                lock.unlock()
             } else {
                 dispatchQueue.async {
                     _ = self.downstream.receive(input)
