@@ -20,7 +20,7 @@ public extension Publisher {
     }
 }
 
-final class CombineUITableViewDataSourceProxy: NSObject, UITableViewDataSource {
+final class CombineUITableViewDataSourceProxy<ValueAccessibleSource: ValueAccessiblePublisher, Element>: NSObject, UITableViewDataSource where ValueAccessibleSource.Output == [Element] {
     private let canEditRowAt: ((UITableView, IndexPath) -> Bool)?
     private let canMoveRowAt: ((UITableView, IndexPath) -> Bool)?
     private let moveRowAtTo: ((UITableView, IndexPath, IndexPath) -> Void)?
@@ -28,10 +28,11 @@ final class CombineUITableViewDataSourceProxy: NSObject, UITableViewDataSource {
     private let titleForHeaderInSection: ((UITableView, Int) -> String)?
     private let titleForFooterInSection: ((UITableView, Int) -> String)?
     private let sectionForSectionIndexTitleAt: ((UITableView, String, Int) -> Int)?
-    private let numberOfRowsInSection: (UITableView, Int) -> Int
+    private let numberOfRowsInSection: ((UITableView, Int) -> Int)?
     private let cellForRowAt: (UITableView, IndexPath) -> UITableViewCell
     private let numberOfSections: ((UITableView) -> Int)?
     private let sectionIndexTitles: ((UITableView) -> [String])?
+    private let valueAccessiblePublisher: ValueAccessibleSource
     
     init(
         canEditRowAt: ((UITableView, IndexPath) -> Bool)?,
@@ -41,10 +42,11 @@ final class CombineUITableViewDataSourceProxy: NSObject, UITableViewDataSource {
         titleForHeaderInSection: ((UITableView, Int) -> String)?,
         titleForFooterInSection: ((UITableView, Int) -> String)?,
         sectionForSectionIndexTitleAt: ((UITableView, String, Int) -> Int)?,
-        numberOfRowsInSection: @escaping (UITableView, Int) -> Int,
+        numberOfRowsInSection: ((UITableView, Int) -> Int)?,
         cellForRowAt: @escaping (UITableView, IndexPath) -> UITableViewCell,
         numberOfSections: ((UITableView) -> Int)?,
-        sectionIndexTitles: ((UITableView) -> [String])?
+        sectionIndexTitles: ((UITableView) -> [String])?,
+        valueAccessiblePublisher: ValueAccessibleSource
     ) {
         self.canEditRowAt = canEditRowAt
         self.canMoveRowAt = canMoveRowAt
@@ -57,6 +59,7 @@ final class CombineUITableViewDataSourceProxy: NSObject, UITableViewDataSource {
         self.cellForRowAt = cellForRowAt
         self.numberOfSections = numberOfSections
         self.sectionIndexTitles = sectionIndexTitles
+        self.valueAccessiblePublisher = valueAccessiblePublisher
     }
     
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
@@ -88,7 +91,7 @@ final class CombineUITableViewDataSourceProxy: NSObject, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        numberOfRowsInSection(tableView, section)
+        numberOfRowsInSection?(tableView, section) ?? valueAccessiblePublisher.value.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
