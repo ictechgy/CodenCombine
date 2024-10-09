@@ -51,6 +51,20 @@ final class ViewController: UIViewController {
                 print("이거 잘 될까??")
             }
             .store(in: &cancellables)
+        
+        let subject = PassthroughSubject<Int, Error>()
+        subject
+            .sink { _ in
+                print("completed")
+                subject.send(completion: .failure(NSError())) // 무한 재귀를 일으키지 않음
+            } receiveValue: { _ in
+                print("receive value")
+                subject.send(1) // 무한재귀를 일으킴
+            }
+            .store(in: &cancellables)
+
+        subject.send(completion: .failure(NSError()))
+        subject.send(1)
     }
     
     deinit {
