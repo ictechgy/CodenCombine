@@ -7,9 +7,12 @@
 
 import Combine
 
-protocol ValueAccessiblePublisher: Publisher, AnyObject {
-    associatedtype Output
+public protocol ValueAccessiblePublisher<Output>: Publisher, AnyObject {
     var value: Output { get }
 }
 
-extension CurrentValueSubject: ValueAccessiblePublisher { }
+extension CurrentValueSubject: ValueAccessiblePublisher {
+    public func eraseToValueAccessiblePublisher() -> ValueAccessiblePublisher<Output> {
+        self
+    }
+}

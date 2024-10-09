@@ -14,7 +14,7 @@ public extension UITableView {
     }
 }
 
-public extension Publisher {
+public extension ValueAccessiblePublisher {
     func bind<Element>(to binder: (UITableView, Array<Element>, IndexPath) -> UITableViewCell) {
         
     }
