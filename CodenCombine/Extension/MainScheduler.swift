@@ -24,14 +24,16 @@ public struct MainScheduler: Scheduler {
         DispatchQueue.main.minimumTolerance
     }
     
+    private let lock = NSRecursiveLock()
+    
     private init(alwaysAync: Bool) {
         self.alwaysAync = alwaysAync
     }
     
-    // FIXME: 재귀 방어 필요
     public func schedule(options: DispatchQueue.SchedulerOptions?, _ action: @escaping () -> Void) {
-        if DispatchQueue.isCurrentQueueMain && alwaysAync == false {
+        if DispatchQueue.isCurrentQueueMain && alwaysAync == false && lock.try() {
             action()
+            lock.unlock()
         } else {
             DispatchQueue.main.schedule(options: options, action)
         }
