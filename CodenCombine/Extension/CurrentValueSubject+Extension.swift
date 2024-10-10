@@ -7,7 +7,7 @@
 
 import Combine
 
-public protocol ValueAccessiblePublisher: AnyObject where Self: Publisher {
+public protocol ValueAccessiblePublisher where Self: Publisher {
     var value: Output { get }
 }
 
@@ -35,3 +35,5 @@ public struct ValueAccessibleAnyPublisher<Wrapped: ValueAccessiblePublisher>: Pu
         wrappedPublisher.receive(subscriber: subscriber)
     }
 }
+
+extension ValueAccessibleAnyPublisher: ValueAccessiblePublisher { }
