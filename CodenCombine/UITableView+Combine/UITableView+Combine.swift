@@ -9,14 +9,24 @@ import UIKit
 import Combine
 
 public extension UITableView {
-    func items() -> Void {
-        
+    func items<Source: ValueAccessiblePublisher>(_ source: Source) -> ((UITableView, IndexPath, Source.Output) -> UITableViewCell) -> Cancellable {
+        { _ in
+            
+            return source
+                .sink { _ in
+                    
+                } receiveValue: { _ in
+                    
+                }
+        }
     }
 }
 
 public extension ValueAccessiblePublisher {
-    func bind<Element>(to binder: (UITableView, Array<Element>, IndexPath) -> UITableViewCell) {
-        
+    typealias CellBuilder = (UITableView, IndexPath, Output) -> UITableViewCell
+    
+    func bind(to binder: (Self) -> (CellBuilder) -> Cancellable, cellBuilder: CellBuilder) -> Cancellable {
+        binder(self)(cellBuilder)
     }
 }
 
@@ -28,9 +38,9 @@ final class CombineUITableViewDataSourceProxy<ValueAccessibleSource: ValueAccess
     private let titleForHeaderInSection: ((UITableView, Int) -> String)?
     private let titleForFooterInSection: ((UITableView, Int) -> String)?
     private let sectionForSectionIndexTitleAt: ((UITableView, String, Int) -> Int)?
-    private let numberOfRowsInSection: ((UITableView, Int) -> Int)?
-    private let cellForRowAt: (UITableView, IndexPath) -> UITableViewCell
-    private let numberOfSections: ((UITableView) -> Int)?
+    private let numberOfRowsInSection: ((UITableView, Int, [Element]) -> Int)?
+    private let cellForRowAt: (UITableView, IndexPath, [Element]) -> UITableViewCell
+    private let numberOfSections: ((UITableView, [Element]) -> Int)?
     private let sectionIndexTitles: ((UITableView) -> [String])?
     private let valueAccessiblePublisher: ValueAccessibleSource
     
@@ -42,9 +52,9 @@ final class CombineUITableViewDataSourceProxy<ValueAccessibleSource: ValueAccess
         titleForHeaderInSection: ((UITableView, Int) -> String)?,
         titleForFooterInSection: ((UITableView, Int) -> String)?,
         sectionForSectionIndexTitleAt: ((UITableView, String, Int) -> Int)?,
-        numberOfRowsInSection: ((UITableView, Int) -> Int)?,
-        cellForRowAt: @escaping (UITableView, IndexPath) -> UITableViewCell,
-        numberOfSections: ((UITableView) -> Int)?,
+        numberOfRowsInSection: ((UITableView, Int, [Element]) -> Int)?,
+        cellForRowAt: @escaping (UITableView, IndexPath, [Element]) -> UITableViewCell,
+        numberOfSections: ((UITableView, [Element]) -> Int)?,
         sectionIndexTitles: ((UITableView) -> [String])?,
         valueAccessiblePublisher: ValueAccessibleSource
     ) {
@@ -91,15 +101,15 @@ final class CombineUITableViewDataSourceProxy<ValueAccessibleSource: ValueAccess
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        numberOfRowsInSection?(tableView, section) ?? valueAccessiblePublisher.value.count
+        numberOfRowsInSection?(tableView, section, valueAccessiblePublisher.value) ?? valueAccessiblePublisher.value.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        cellForRowAt(tableView, indexPath)
+        cellForRowAt(tableView, indexPath, valueAccessiblePublisher.value)
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        numberOfSections?(tableView) ?? 1
+        numberOfSections?(tableView, valueAccessiblePublisher.value) ?? 1
     }
     
     func sectionIndexTitles(for tableView: UITableView) -> [String]? {
