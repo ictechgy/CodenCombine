@@ -9,13 +9,37 @@ import UIKit
 import Combine
 
 public extension UITableView {
-    func items<Source: ValueAccessiblePublisher>(_ source: Source) -> ((UITableView, IndexPath, Source.Output) -> UITableViewCell) -> Cancellable {
-        { _ in
+    func items<Source: ValueAccessiblePublisher, Element>(_ source: Source) -> (@escaping (UITableView, IndexPath, Source.Output) -> UITableViewCell) -> Cancellable where Source.Output == [Element], Source.Failure == Never {
+        { cellBuilder in
             
+            let dataSoruceProxy: CombineUITableViewDataSourceProxy<Source, Element>
+            if let dataSource = self.dataSource, type(of: dataSource) != CombineUITableViewDataSourceProxy<Source, Element>.self {
+                fatalError("이미 다른 dataSource가 설정되어있습니다.")
+                
+            } else if let aleadyExistingProxy = self.dataSource as? CombineUITableViewDataSourceProxy<Source, Element> {
+                dataSoruceProxy = aleadyExistingProxy
+                dataSoruceProxy.cellForRowAt = cellBuilder
+            } else {
+                dataSoruceProxy = CombineUITableViewDataSourceProxy(
+                    canEditRowAt: nil,
+                    canMoveRowAt: nil,
+                    moveRowAtTo: nil,
+                    commitForRowAt: nil,
+                    titleForHeaderInSection: nil,
+                    titleForFooterInSection: nil,
+                    sectionForSectionIndexTitleAt: nil,
+                    numberOfRowsInSection: nil,
+                    cellForRowAt: cellBuilder,
+                    numberOfSections: nil,
+                    sectionIndexTitles: nil,
+                    valueAccessiblePublisher: source
+                )
+                self.dataSource = dataSoruceProxy
+            }
+            
+            // 최종적으로는 아래가 구독되는 형태
             return source
-                .sink { _ in
-                    
-                } receiveValue: { _ in
+                .sink { value in
                     
                 }
         }
@@ -31,17 +55,17 @@ public extension ValueAccessiblePublisher {
 }
 
 final class CombineUITableViewDataSourceProxy<ValueAccessibleSource: ValueAccessiblePublisher, Element>: NSObject, UITableViewDataSource where ValueAccessibleSource.Output == [Element] {
-    private let canEditRowAt: ((UITableView, IndexPath) -> Bool)?
-    private let canMoveRowAt: ((UITableView, IndexPath) -> Bool)?
-    private let moveRowAtTo: ((UITableView, IndexPath, IndexPath) -> Void)?
-    private let commitForRowAt: ((UITableView, UITableViewCell.EditingStyle, IndexPath) -> Void)?
-    private let titleForHeaderInSection: ((UITableView, Int) -> String)?
-    private let titleForFooterInSection: ((UITableView, Int) -> String)?
-    private let sectionForSectionIndexTitleAt: ((UITableView, String, Int) -> Int)?
-    private let numberOfRowsInSection: ((UITableView, Int, [Element]) -> Int)?
-    private let cellForRowAt: (UITableView, IndexPath, [Element]) -> UITableViewCell
-    private let numberOfSections: ((UITableView, [Element]) -> Int)?
-    private let sectionIndexTitles: ((UITableView) -> [String])?
+    fileprivate var canEditRowAt: ((UITableView, IndexPath) -> Bool)?
+    fileprivate var canMoveRowAt: ((UITableView, IndexPath) -> Bool)?
+    fileprivate var moveRowAtTo: ((UITableView, IndexPath, IndexPath) -> Void)?
+    fileprivate var commitForRowAt: ((UITableView, UITableViewCell.EditingStyle, IndexPath) -> Void)?
+    fileprivate var titleForHeaderInSection: ((UITableView, Int) -> String)?
+    fileprivate var titleForFooterInSection: ((UITableView, Int) -> String)?
+    fileprivate var sectionForSectionIndexTitleAt: ((UITableView, String, Int) -> Int)?
+    fileprivate var numberOfRowsInSection: ((UITableView, Int, [Element]) -> Int)?
+    fileprivate var cellForRowAt: (UITableView, IndexPath, [Element]) -> UITableViewCell
+    fileprivate var numberOfSections: ((UITableView, [Element]) -> Int)?
+    fileprivate var sectionIndexTitles: ((UITableView) -> [String])?
     private let valueAccessiblePublisher: ValueAccessibleSource
     
     init(
