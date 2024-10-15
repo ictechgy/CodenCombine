@@ -9,6 +9,12 @@ import UIKit
 import Combine
 
 extension UIViewController {
+    public var viewWillAppearPublisher: AnyPublisher<Void, Never> {
+        self.viewWillAppearSubject.eraseToAnyPublisher()
+    }
+}
+
+extension UIViewController {
     private static func swizzleViewWillAppear() {
         let originalMethodSelector = #selector(viewWillAppear)
         let targetMethodSelector = #selector(interceptedViewWillAppear)
@@ -23,20 +29,25 @@ extension UIViewController {
     
     @objc private func interceptedViewWillAppear(animated: Bool) {
         self.viewWillAppear(animated)
-        
+        self.viewWillAppearSubject.send(())
     }
 }
 
 extension UIViewController {
     enum AssociatedKeys {
-        static var viewWillAppear = 0
+        static var viewDidLoad = 0
+        static var viewWillAppear = 1
     }
     
-    var viewWillAppearPublisher: AnyPublisher<Void, Never>? {
+    var viewWillAppearSubject: PassthroughSubject<Void, Never> {
         get {
-            let associatedObject = objc_getAssociatedObject(self, &AssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never>
-            
-            return associatedObject?.eraseToAnyPublisher()
+            if let associatedObject = objc_getAssociatedObject(self, &AssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
+                return associatedObject
+            } else {
+                let viewWillAppearSubject = PassthroughSubject<Void, Never>()
+                self.viewWillAppearSubject = viewWillAppearSubject
+                return viewWillAppearSubject
+            }
         }
         set {
             objc_setAssociatedObject(self, &AssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
