@@ -28,15 +28,43 @@ extension UIViewController {
     }
     
     @objc private func interceptedViewWillAppear(animated: Bool) {
-        self.viewWillAppear(animated)
+        self.viewWillAppear(animated) // FIXME: - 무한재귀문제 발생
         self.viewWillAppearSubject.send(())
     }
 }
 
 extension UIViewController {
-    enum AssociatedKeys {
-        static var viewDidLoad = 0
-        static var viewWillAppear = 1
+    struct AssociatedKeys {
+        private let rawValue: Int
+        
+        static var viewDidLoad = AssociatedKeys(rawValue: 0)
+        static var viewWillAppear = AssociatedKeys(rawValue: 1)
+        
+        private init(rawValue: Int) {
+            self.rawValue = rawValue
+        }
+        
+        var originalMethod: Selector? {
+            switch self.rawValue {
+            case 0:
+                return #selector(UIViewController.viewDidLoad)
+            case 1:
+                return #selector(UIViewController.viewWillAppear)
+            default:
+                return nil
+            }
+        }
+        
+        var swizzledMethod: Selector? {
+            switch self.rawValue {
+            case 0:
+                fatalError("아직 구현되지 않음")
+            case 1:
+                return #selector(UIViewController.interceptedViewWillAppear)
+            default:
+                return nil
+            }
+        }
     }
     
     var viewWillAppearSubject: PassthroughSubject<Void, Never> {
@@ -52,6 +80,13 @@ extension UIViewController {
         set {
             objc_setAssociatedObject(self, &AssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
+    }
+    
+    private func methodDidSwizzled(_ associatedKey: AssociatedKeys) -> Bool {
+        guard let originalMethodSelector = associatedKey.originalMethod,
+              let swizzledMethodSelctor = associatedKey.swizzledMethod else { return false }
+        
+        return true
     }
 }
 
