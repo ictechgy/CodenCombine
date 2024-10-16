@@ -9,8 +9,12 @@ import UIKit
 import Combine
 
 extension UIViewController {
-    public var viewWillAppearPublisher: AnyPublisher<Void, Never> {
-        self.viewWillAppearSubject.eraseToAnyPublisher()
+    public var viewWillAppearInvoked: AnyPublisher<Void, Never> {
+        if methodDidSwizzled(.viewWillAppear) == false {
+            Self.swizzleViewWillAppear()
+        }
+        
+        return self.viewWillAppearSubject.eraseToAnyPublisher()
     }
 }
 
@@ -28,7 +32,7 @@ extension UIViewController {
     }
     
     @objc private func interceptedViewWillAppear(animated: Bool) {
-        self.viewWillAppear(animated) // FIXME: - 무한재귀문제 발생
+        self.interceptedViewWillAppear(animated: animated)
         self.viewWillAppearSubject.send(())
     }
 }
@@ -90,3 +94,11 @@ extension UIViewController {
     }
 }
 
+/*
+ 기록용 (아래가 아닌가 의심이 되어 기록), C언어 기준
+ - selector: 함수의 이름
+ - class_getInstanceMethod(<#T##cls: AnyClass?##AnyClass?#>, <#T##name: Selector##Selector#>) -> 함수의 정의
+ - class_getMethodImplementation(<#T##cls: AnyClass?##AnyClass?#>, <#T##name: Selector##Selector#>) -> 함수의 구현
+ 
+ swizzling을 했을 때 getInstanceMethod 주소는 그대로였으나 getMethodImplementation 주소는 맞바뀜
+*/
