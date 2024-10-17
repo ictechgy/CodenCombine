@@ -9,12 +9,44 @@ import UIKit
 import Combine
 
 extension UIViewController {
-    public var viewWillAppearInvoked: AnyPublisher<Void, Never> {
-        if methodDidSwizzled(.viewWillAppear) == false {
+    public var viewDidLoadInvoked: AnyPublisher<Void, Never> {
+        if methodDidSwizzled(.viewDidLoad) == false {
             Self.swizzle(.viewDidLoad)
         }
         
+        return self.viewDidLoadSubject.eraseToAnyPublisher()
+    }
+    
+    public var viewWillAppearInvoked: AnyPublisher<Void, Never> {
+        if methodDidSwizzled(.viewWillAppear) == false {
+            Self.swizzle(.viewWillAppear)
+        }
+        
         return self.viewWillAppearSubject.eraseToAnyPublisher()
+    }
+    
+    public var viewDidAppearInvoked: AnyPublisher<Void, Never> {
+        if methodDidSwizzled(.viewDidAppear) == false {
+            Self.swizzle(.viewDidAppear)
+        }
+        
+        return self.viewDidAppearSubject.eraseToAnyPublisher()
+    }
+    
+    public var viewWillDisappearInvoked: AnyPublisher<Void, Never> {
+        if methodDidSwizzled(.viewWillDisappear) == false {
+            Self.swizzle(.viewWillDisappear)
+        }
+        
+        return self.viewWillDisappearSubject.eraseToAnyPublisher()
+    }
+    
+    public var viewDidDisappearInvoked: AnyPublisher<Void, Never> {
+        if methodDidSwizzled(.viewWillDisappear) == false {
+            Self.swizzle(.viewWillDisappear)
+        }
+        
+        return self.viewDidDisappearSubject.eraseToAnyPublisher()
     }
 }
 
@@ -33,9 +65,29 @@ extension UIViewController {
         method_exchangeImplementations(originalMethod, targetMethod)
     }
     
+    @objc private func interceptedViewDidLoad(animated: Bool) {
+        self.interceptedViewDidLoad(animated: animated)
+        self.viewDidLoadSubject.send(())
+    }
+    
     @objc private func interceptedViewWillAppear(animated: Bool) {
         self.interceptedViewWillAppear(animated: animated)
         self.viewWillAppearSubject.send(())
+    }
+    
+    @objc private func interceptedViewDidAppear(animated: Bool) {
+        self.interceptedViewDidAppear(animated: animated)
+        self.viewDidAppearSubject.send(())
+    }
+    
+    @objc private func interceptedViewWillDisappear(animated: Bool) {
+        self.interceptedViewWillDisappear(animated: animated)
+        self.viewWillDisappearSubject.send(())
+    }
+    
+    @objc private func interceptedViewDidDisappear(animated: Bool) {
+        self.interceptedViewDidDisappear(animated: animated)
+        self.viewDidDisappearSubject.send(())
     }
 }
 
@@ -49,6 +101,10 @@ extension UIViewController {
         
         static var viewDidLoad = LifeCycleAssociatedKeys(rawValue: 0)
         static var viewWillAppear = LifeCycleAssociatedKeys(rawValue: 1)
+        static var viewDidAppear = LifeCycleAssociatedKeys(rawValue: 2)
+        static var viewWillDisappear = LifeCycleAssociatedKeys(rawValue: 3)
+        static var viewDidDisappear = LifeCycleAssociatedKeys(rawValue: 4)
+        
         
         private init(rawValue: Int) {
             self.rawValue = rawValue
@@ -58,19 +114,86 @@ extension UIViewController {
             switch self.rawValue {
             case Self.viewDidLoad.rawValue: return #selector(UIViewController.viewDidLoad)
             case Self.viewWillAppear.rawValue: return #selector(UIViewController.viewWillAppear)
+            case Self.viewDidAppear.rawValue: return #selector(UIViewController.viewDidAppear)
+            case Self.viewWillDisappear.rawValue: return #selector(UIViewController.viewWillDisappear)
+            case Self.viewDidDisappear.rawValue: return #selector(UIViewController.viewDidDisappear)
             default: fatalError("정의되지 않은 메소드에 대한 동작")
             }
         }
         
         var targetMethodSelector: Selector {
             switch self.rawValue {
-            case Self.viewDidLoad.rawValue: return #selector(UIViewController.interceptedViewWillAppear)
+            case Self.viewDidLoad.rawValue: return #selector(UIViewController.interceptedViewDidLoad)
+            case Self.viewWillAppear.rawValue: return #selector(UIViewController.interceptedViewWillAppear)
+            case Self.viewDidAppear.rawValue: return #selector(UIViewController.interceptedViewDidAppear)
+            case Self.viewWillDisappear.rawValue: return #selector(UIViewController.interceptedViewWillDisappear)
+            case Self.viewDidDisappear.rawValue: return #selector(UIViewController.interceptedViewDidDisappear)
             default: fatalError("정의되지 않은 메소드에 대한 동작")
             }
         }
     }
     
+    var viewDidLoadSubject: PassthroughSubject<Void, Never> {
+        get {
+            if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
+                return associatedObject
+            } else {
+                let viewWillAppearSubject = PassthroughSubject<Void, Never>()
+                self.viewWillAppearSubject = viewWillAppearSubject
+                return viewWillAppearSubject
+            }
+        }
+        set {
+            objc_setAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+    
     var viewWillAppearSubject: PassthroughSubject<Void, Never> {
+        get {
+            if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
+                return associatedObject
+            } else {
+                let viewWillAppearSubject = PassthroughSubject<Void, Never>()
+                self.viewWillAppearSubject = viewWillAppearSubject
+                return viewWillAppearSubject
+            }
+        }
+        set {
+            objc_setAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+    
+    var viewDidAppearSubject: PassthroughSubject<Void, Never> {
+        get {
+            if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
+                return associatedObject
+            } else {
+                let viewWillAppearSubject = PassthroughSubject<Void, Never>()
+                self.viewWillAppearSubject = viewWillAppearSubject
+                return viewWillAppearSubject
+            }
+        }
+        set {
+            objc_setAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+    
+    var viewWillDisappearSubject: PassthroughSubject<Void, Never> {
+        get {
+            if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
+                return associatedObject
+            } else {
+                let viewWillAppearSubject = PassthroughSubject<Void, Never>()
+                self.viewWillAppearSubject = viewWillAppearSubject
+                return viewWillAppearSubject
+            }
+        }
+        set {
+            objc_setAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+    
+    var viewDidDisappearSubject: PassthroughSubject<Void, Never> {
         get {
             if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
                 return associatedObject
