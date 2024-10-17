@@ -11,7 +11,7 @@ import Combine
 extension UIViewController {
     public var viewWillAppearInvoked: AnyPublisher<Void, Never> {
         if methodDidSwizzled(.viewWillAppear) == false {
-            Self.swizzleViewWillAppear()
+            Self.swizzle(.viewDidLoad)
         }
         
         return self.viewWillAppearSubject.eraseToAnyPublisher()
@@ -20,9 +20,9 @@ extension UIViewController {
 
 extension UIViewController {
     // TODO: 다른 프레임워크에 의해 스위즐링 되는 경우를 막거나 탐지해야 함
-    private static func swizzleViewWillAppear() {
-        let originalMethodSelector = #selector(viewWillAppear)
-        let targetMethodSelector = #selector(interceptedViewWillAppear)
+    private static func swizzle(_ associatedKey: LifeCycleAssociatedKeys) {
+        let originalMethodSelector = associatedKey.originalMethodSelector
+        let targetMethodSelector = associatedKey.targetMethodSelector
         
         guard let originalMethod = class_getInstanceMethod(UIViewController.self, originalMethodSelector),
               let targetMethod = class_getInstanceMethod(UIViewController.self, targetMethodSelector) else {
@@ -54,10 +54,17 @@ extension UIViewController {
             self.rawValue = rawValue
         }
         
-        var methodSelector: Selector {
+        var originalMethodSelector: Selector {
             switch self.rawValue {
             case Self.viewDidLoad.rawValue: return #selector(UIViewController.viewDidLoad)
             case Self.viewWillAppear.rawValue: return #selector(UIViewController.viewWillAppear)
+            default: fatalError("정의되지 않은 메소드에 대한 동작")
+            }
+        }
+        
+        var targetMethodSelector: Selector {
+            switch self.rawValue {
+            case Self.viewDidLoad.rawValue: return #selector(UIViewController.interceptedViewWillAppear)
             default: fatalError("정의되지 않은 메소드에 대한 동작")
             }
         }
@@ -94,7 +101,7 @@ extension UIViewController {
     }
     
     private func methodDidSwizzled(_ associatedKey: LifeCycleAssociatedKeys) -> Bool {
-        Self.swizzledMethodsBasket.contains(associatedKey.methodSelector)
+        Self.swizzledMethodsBasket.contains(associatedKey.originalMethodSelector)
     }
 }
 
