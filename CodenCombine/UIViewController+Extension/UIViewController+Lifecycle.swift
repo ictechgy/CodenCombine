@@ -10,43 +10,60 @@ import Combine
 
 extension UIViewController {
     public var viewDidLoadInvoked: AnyPublisher<Void, Never> {
-        if methodDidSwizzled(.viewDidLoad) == false {
-            Self.swizzle(.viewDidLoad)
+        let key = LifeCycleAssociatedKeys.viewDidLoad
+        if methodDidSwizzled(key) == false {
+            Self.swizzle(key)
         }
         
-        return self.viewDidLoadSubject.eraseToAnyPublisher()
+        return self.publisher(identifiedBy: key)
     }
     
     public var viewWillAppearInvoked: AnyPublisher<Void, Never> {
-        if methodDidSwizzled(.viewWillAppear) == false {
-            Self.swizzle(.viewWillAppear)
+        let key = LifeCycleAssociatedKeys.viewWillAppear
+        if methodDidSwizzled(key) == false {
+            Self.swizzle(key)
         }
         
-        return self.viewWillAppearSubject.eraseToAnyPublisher()
+        return self.publisher(identifiedBy: key)
     }
     
     public var viewDidAppearInvoked: AnyPublisher<Void, Never> {
-        if methodDidSwizzled(.viewDidAppear) == false {
-            Self.swizzle(.viewDidAppear)
+        let key = LifeCycleAssociatedKeys.viewDidAppear
+        if methodDidSwizzled(key) == false {
+            Self.swizzle(key)
         }
         
-        return self.viewDidAppearSubject.eraseToAnyPublisher()
+        return self.publisher(identifiedBy: key)
     }
     
     public var viewWillDisappearInvoked: AnyPublisher<Void, Never> {
-        if methodDidSwizzled(.viewWillDisappear) == false {
-            Self.swizzle(.viewWillDisappear)
+        let key = LifeCycleAssociatedKeys.viewWillDisappear
+        if methodDidSwizzled(key) == false {
+            Self.swizzle(key)
         }
         
-        return self.viewWillDisappearSubject.eraseToAnyPublisher()
+        return self.publisher(identifiedBy: key)
     }
     
     public var viewDidDisappearInvoked: AnyPublisher<Void, Never> {
-        if methodDidSwizzled(.viewWillDisappear) == false {
-            Self.swizzle(.viewWillDisappear)
+        let key = LifeCycleAssociatedKeys.viewWillDisappear
+        if methodDidSwizzled(key) == false {
+            Self.swizzle(key)
         }
         
-        return self.viewDidDisappearSubject.eraseToAnyPublisher()
+        return self.publisher(identifiedBy: key)
+    }
+    
+    private func publisher(identifiedBy associatedKey: LifeCycleAssociatedKeys) -> AnyPublisher<Void, Never> {
+        switch associatedKey {
+        case .viewDidLoad: return self.viewDidLoadSubject.eraseToAnyPublisher()
+        case .viewWillAppear: return self.viewWillAppearSubject.eraseToAnyPublisher()
+        case .viewDidAppear: return self.viewDidAppearSubject.eraseToAnyPublisher()
+        case .viewWillDisappear: return self.viewWillDisappearSubject.eraseToAnyPublisher()
+        case .viewDidDisappear: return self.viewDidDisappearSubject.eraseToAnyPublisher()
+        default:
+            fatalError("정의되지 않은 publisher 요청")
+        }
     }
 }
 
@@ -96,7 +113,7 @@ extension UIViewController {
         static var swizzledMethodsBasket = -1
     }
     
-    struct LifeCycleAssociatedKeys {
+    struct LifeCycleAssociatedKeys: Equatable {
         private let rawValue: Int
         
         static var viewDidLoad = LifeCycleAssociatedKeys(rawValue: 0)
@@ -133,6 +150,7 @@ extension UIViewController {
         }
     }
     
+    // TODO: 아래처럼 일일히 나열하지 말고 subject를 묶어놓을 dictionary
     var viewDidLoadSubject: PassthroughSubject<Void, Never> {
         get {
             if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
