@@ -28,6 +28,7 @@ extension UIViewController {
             return
         }
         
+        swizzledMethodsBasket.insert(originalMethodSelector)
         method_exchangeImplementations(originalMethod, targetMethod)
     }
     
@@ -38,42 +39,32 @@ extension UIViewController {
 }
 
 extension UIViewController {
-    struct AssociatedKeys {
+    enum AssociatedKeys {
+        static var swizzledMethodsBasket = -1
+    }
+    
+    struct LifeCycleAssociatedKeys {
         private let rawValue: Int
         
-        static var viewDidLoad = AssociatedKeys(rawValue: 0)
-        static var viewWillAppear = AssociatedKeys(rawValue: 1)
+        static var viewDidLoad = LifeCycleAssociatedKeys(rawValue: 0)
+        static var viewWillAppear = LifeCycleAssociatedKeys(rawValue: 1)
         
         private init(rawValue: Int) {
             self.rawValue = rawValue
         }
         
-        var originalMethod: Selector? {
+        var methodSelector: Selector {
             switch self.rawValue {
-            case 0:
-                return #selector(UIViewController.viewDidLoad)
-            case 1:
-                return #selector(UIViewController.viewWillAppear)
-            default:
-                return nil
-            }
-        }
-        
-        var swizzledMethod: Selector? {
-            switch self.rawValue {
-            case 0:
-                fatalError("아직 구현되지 않음")
-            case 1:
-                return #selector(UIViewController.interceptedViewWillAppear)
-            default:
-                return nil
+            case Self.viewDidLoad.rawValue: return #selector(UIViewController.viewDidLoad)
+            case Self.viewWillAppear.rawValue: return #selector(UIViewController.viewWillAppear)
+            default: fatalError("정의되지 않은 메소드에 대한 동작")
             }
         }
     }
     
     var viewWillAppearSubject: PassthroughSubject<Void, Never> {
         get {
-            if let associatedObject = objc_getAssociatedObject(self, &AssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
+            if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
                 return associatedObject
             } else {
                 let viewWillAppearSubject = PassthroughSubject<Void, Never>()
@@ -82,15 +73,27 @@ extension UIViewController {
             }
         }
         set {
-            objc_setAssociatedObject(self, &AssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            objc_setAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
     }
     
-    private func methodDidSwizzled(_ associatedKey: AssociatedKeys) -> Bool {
-        guard let originalMethodSelector = associatedKey.originalMethod,
-              let swizzledMethodSelctor = associatedKey.swizzledMethod else { return false }
-        
-        return true
+    static var swizzledMethodsBasket: Set<Selector> {
+        get {
+            if let associatedSet = objc_getAssociatedObject(self, &AssociatedKeys.swizzledMethodsBasket) as? Set<Selector> {
+                return associatedSet
+            } else {
+                let associatedSet = Set<Selector>()
+                self.swizzledMethodsBasket = associatedSet
+                return associatedSet
+            }
+        }
+        set {
+            objc_setAssociatedObject(self, &AssociatedKeys.swizzledMethodsBasket, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+    
+    private func methodDidSwizzled(_ associatedKey: LifeCycleAssociatedKeys) -> Bool {
+        Self.swizzledMethodsBasket.contains(associatedKey.methodSelector)
     }
 }
 
