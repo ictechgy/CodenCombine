@@ -19,6 +19,7 @@ extension UIViewController {
 }
 
 extension UIViewController {
+    // TODO: 다른 프레임워크에 의해 스위즐링 되는 경우를 막거나 탐지해야 함
     private static func swizzleViewWillAppear() {
         let originalMethodSelector = #selector(viewWillAppear)
         let targetMethodSelector = #selector(interceptedViewWillAppear)
