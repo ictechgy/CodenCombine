@@ -56,11 +56,11 @@ extension UIViewController {
     
     private func publisher(identifiedBy associatedKey: LifeCycleAssociatedKeys) -> AnyPublisher<Void, Never> {
         switch associatedKey {
-        case .viewDidLoad: return self.viewDidLoadSubject.eraseToAnyPublisher()
-        case .viewWillAppear: return self.viewWillAppearSubject.eraseToAnyPublisher()
-        case .viewDidAppear: return self.viewDidAppearSubject.eraseToAnyPublisher()
-        case .viewWillDisappear: return self.viewWillDisappearSubject.eraseToAnyPublisher()
-        case .viewDidDisappear: return self.viewDidDisappearSubject.eraseToAnyPublisher()
+        case .viewDidLoad: return self[lifecycleKey: .viewDidLoad].eraseToAnyPublisher()
+        case .viewWillAppear: return self[lifecycleKey: .viewWillAppear].eraseToAnyPublisher()
+        case .viewDidAppear: return self[lifecycleKey: .viewDidAppear].eraseToAnyPublisher()
+        case .viewWillDisappear: return self[lifecycleKey: .viewWillDisappear].eraseToAnyPublisher()
+        case .viewDidDisappear: return self[lifecycleKey: .viewDidDisappear].eraseToAnyPublisher()
         default:
             fatalError("정의되지 않은 publisher 요청")
         }
@@ -84,36 +84,37 @@ extension UIViewController {
     
     @objc private func interceptedViewDidLoad(animated: Bool) {
         self.interceptedViewDidLoad(animated: animated)
-        self.viewDidLoadSubject.send(())
+        self[lifecycleKey: .viewDidLoad].send(())
     }
     
     @objc private func interceptedViewWillAppear(animated: Bool) {
         self.interceptedViewWillAppear(animated: animated)
-        self.viewWillAppearSubject.send(())
+        self[lifecycleKey: .viewWillAppear].send(())
     }
     
     @objc private func interceptedViewDidAppear(animated: Bool) {
         self.interceptedViewDidAppear(animated: animated)
-        self.viewDidAppearSubject.send(())
+        self[lifecycleKey: .viewDidAppear].send(())
     }
     
     @objc private func interceptedViewWillDisappear(animated: Bool) {
         self.interceptedViewWillDisappear(animated: animated)
-        self.viewWillDisappearSubject.send(())
+        self[lifecycleKey: .viewWillDisappear].send(())
     }
     
     @objc private func interceptedViewDidDisappear(animated: Bool) {
         self.interceptedViewDidDisappear(animated: animated)
-        self.viewDidDisappearSubject.send(())
+        self[lifecycleKey: .viewDidDisappear].send(())
     }
 }
 
 extension UIViewController {
     enum AssociatedKeys {
         static var swizzledMethodsBasket = -1
+        static var lifecycleSubjectCollection = -2
     }
     
-    struct LifeCycleAssociatedKeys: Equatable {
+    struct LifeCycleAssociatedKeys: Hashable {
         private let rawValue: Int
         
         static var viewDidLoad = LifeCycleAssociatedKeys(rawValue: 0)
@@ -150,79 +151,30 @@ extension UIViewController {
         }
     }
     
-    // TODO: 아래처럼 일일히 나열하지 말고 subject를 묶어놓을 dictionary
-    var viewDidLoadSubject: PassthroughSubject<Void, Never> {
+    private var lifecycleSubjectCollection: [LifeCycleAssociatedKeys: PassthroughSubject<Void, Never>] {
         get {
-            if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
+            if let associatedObject = objc_getAssociatedObject(self, &AssociatedKeys.lifecycleSubjectCollection) as? [LifeCycleAssociatedKeys: PassthroughSubject<Void, Never>] {
                 return associatedObject
             } else {
-                let viewWillAppearSubject = PassthroughSubject<Void, Never>()
-                self.viewWillAppearSubject = viewWillAppearSubject
-                return viewWillAppearSubject
+                let lifecycleSubjectCollection = [LifeCycleAssociatedKeys: PassthroughSubject<Void, Never>]()
+                self.lifecycleSubjectCollection = lifecycleSubjectCollection
+                return lifecycleSubjectCollection
             }
         }
         set {
-            objc_setAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            objc_setAssociatedObject(self, &AssociatedKeys.lifecycleSubjectCollection, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
     }
     
-    var viewWillAppearSubject: PassthroughSubject<Void, Never> {
+    subscript (lifecycleKey associatedKey: LifeCycleAssociatedKeys) -> PassthroughSubject<Void, Never> {
         get {
-            if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
-                return associatedObject
+            if let subject = lifecycleSubjectCollection[associatedKey] {
+                return subject
             } else {
-                let viewWillAppearSubject = PassthroughSubject<Void, Never>()
-                self.viewWillAppearSubject = viewWillAppearSubject
-                return viewWillAppearSubject
+                let subject = PassthroughSubject<Void, Never>()
+                lifecycleSubjectCollection[associatedKey] = subject
+                return subject
             }
-        }
-        set {
-            objc_setAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        }
-    }
-    
-    var viewDidAppearSubject: PassthroughSubject<Void, Never> {
-        get {
-            if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
-                return associatedObject
-            } else {
-                let viewWillAppearSubject = PassthroughSubject<Void, Never>()
-                self.viewWillAppearSubject = viewWillAppearSubject
-                return viewWillAppearSubject
-            }
-        }
-        set {
-            objc_setAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        }
-    }
-    
-    var viewWillDisappearSubject: PassthroughSubject<Void, Never> {
-        get {
-            if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
-                return associatedObject
-            } else {
-                let viewWillAppearSubject = PassthroughSubject<Void, Never>()
-                self.viewWillAppearSubject = viewWillAppearSubject
-                return viewWillAppearSubject
-            }
-        }
-        set {
-            objc_setAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        }
-    }
-    
-    var viewDidDisappearSubject: PassthroughSubject<Void, Never> {
-        get {
-            if let associatedObject = objc_getAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear) as? PassthroughSubject<Void, Never> {
-                return associatedObject
-            } else {
-                let viewWillAppearSubject = PassthroughSubject<Void, Never>()
-                self.viewWillAppearSubject = viewWillAppearSubject
-                return viewWillAppearSubject
-            }
-        }
-        set {
-            objc_setAssociatedObject(self, &LifeCycleAssociatedKeys.viewWillAppear, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
     }
     
