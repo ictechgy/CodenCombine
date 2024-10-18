@@ -39,8 +39,9 @@ public extension UITableView {
             
             // 최종적으로는 아래가 구독되는 형태
             return source
-                .sink { value in
-                    
+                .withUnretained(self)
+                .sink { tableView, _ in
+                    tableView.reloadData()
                 }
         }
     }
