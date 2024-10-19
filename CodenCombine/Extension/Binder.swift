@@ -7,11 +7,11 @@
 
 import Combine
 
-struct Binder<Value>: Subscriber {
-    typealias Input = Value
-    typealias Failure = Never
+public struct Binder<Value>: Subscriber {
+    public typealias Input = Value
+    public typealias Failure = Never
     
-    let combineIdentifier: CombineIdentifier = CombineIdentifier()
+    public let combineIdentifier: CombineIdentifier = CombineIdentifier()
     private let binding: (Value) -> Void
     
     init<Target: AnyObject>(_ target: Target, scheduler: any Scheduler = MainScheduler.instance, action: @escaping (Target, Value) -> Void) {
@@ -24,16 +24,16 @@ struct Binder<Value>: Subscriber {
         }
     }
     
-    func receive(subscription: any Subscription) {
+    public func receive(subscription: any Subscription) {
         subscription.request(.unlimited)
     }
     
-    func receive(_ input: Input) -> Subscribers.Demand {
+    public func receive(_ input: Input) -> Subscribers.Demand {
         self.binding(input)
         return .none
     }
     
-    func receive(completion: Subscribers.Completion<Failure>) {
+    public func receive(completion: Subscribers.Completion<Failure>) {
         // never end
     }
 }
