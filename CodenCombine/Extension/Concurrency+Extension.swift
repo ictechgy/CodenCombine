@@ -8,6 +8,7 @@
 import Combine
 
 public extension Publisher {
+    // TODO: 취소 가능한 map도 만들어보는건 어떨까? 
     func mapByTask<T>(_ transform: @escaping (Output) async throws -> T) -> Publishers.MapByTask<Self, T> where Self.Failure == Never {
         Publishers.MapByTask(upstream: self, transform: transform)
     }
