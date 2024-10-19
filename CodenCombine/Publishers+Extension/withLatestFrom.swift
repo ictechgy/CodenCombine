@@ -9,34 +9,41 @@ import Combine
 import Foundation
 
 public extension Publisher {
-    func withLatestFrom<AnotherUpstream>(_ anotherUpstream: AnotherUpstream) -> Publishers.WithLatestFrom<Self, AnotherUpstream> where AnotherUpstream: Publisher, Failure == AnotherUpstream.Failure {
-        Publishers.WithLatestFrom(upstream: self, anotherUpstream: anotherUpstream)
+    func withLatestFrom<AnotherUpstream>(_ anotherUpstream: AnotherUpstream) -> Publishers.WithLatestFrom<Self, AnotherUpstream, (Output, AnotherUpstream.Output)> where AnotherUpstream: Publisher, Failure == AnotherUpstream.Failure {
+        Publishers.WithLatestFrom(upstream: self, anotherUpstream: anotherUpstream) {
+            ($0, $1)
+        }
+    }
+    
+    func withLatestFrom<AnotherUpstream, FinalOutput>(_ anotherUpstream: AnotherUpstream, _ resultSelector: @escaping (Output, AnotherUpstream.Output) -> FinalOutput) -> Publishers.WithLatestFrom<Self, AnotherUpstream, FinalOutput> where AnotherUpstream: Publisher, Failure == AnotherUpstream.Failure {
+        Publishers.WithLatestFrom(upstream: self, anotherUpstream: anotherUpstream, resultSelector: resultSelector)
     }
 }
 
 public extension Publishers {
-    struct WithLatestFrom<Upstream, AnotherUpstream>: Publisher where Upstream: Publisher, AnotherUpstream: Publisher, Upstream.Failure == AnotherUpstream.Failure {
-        public typealias Output = (Upstream.Output, AnotherUpstream.Output)
+    struct WithLatestFrom<Upstream, AnotherUpstream, FinalOutput>: Publisher where Upstream: Publisher, AnotherUpstream: Publisher, Upstream.Failure == AnotherUpstream.Failure {
+        public typealias Output = FinalOutput
         public typealias Failure = Upstream.Failure
         
         let upstream: Upstream
         let anotherUpstream: AnotherUpstream
+        let resultSelector: (Upstream.Output, AnotherUpstream.Output) -> FinalOutput
         
         public func receive<S>(subscriber: S) where S : Subscriber, Upstream.Failure == S.Failure, S.Input == Output {
-            let subscription = WithLatestFromSubscription(upstream: upstream, anotherUpstream: anotherUpstream, subscriber: subscriber)
+            let subscription = WithLatestFromSubscription(upstream: upstream, anotherUpstream: anotherUpstream, resultSelector: resultSelector, subscriber: subscriber)
             subscriber.receive(subscription: subscription)
         }
     }
 }
 
 extension Publishers.WithLatestFrom {
-    final class WithLatestFromSubscription<S: Subscriber>: Subscription where Upstream.Failure == AnotherUpstream.Failure, S.Input == (Upstream.Output, AnotherUpstream.Output), S.Failure == Upstream.Failure {
+    final class WithLatestFromSubscription<S: Subscriber>: Subscription where Upstream.Failure == AnotherUpstream.Failure, S.Input == FinalOutput, S.Failure == Upstream.Failure {
         
         private let recursiveLock = NSRecursiveLock()
         private var latestData: AnotherUpstream.Output?
         private var cancellable = Set<AnyCancellable>()
         
-        init(upstream: Upstream, anotherUpstream: AnotherUpstream, subscriber: S) {
+        init(upstream: Upstream, anotherUpstream: AnotherUpstream, resultSelector: @escaping (Upstream.Output, AnotherUpstream.Output) -> FinalOutput, subscriber: S) {
             anotherUpstream
                 .withUnretained(self)
                 .sink { [weak self] in
@@ -58,7 +65,7 @@ extension Publishers.WithLatestFrom {
                     subscriptionSelf.recursiveLock.lock()
                     
                     if let latestData = subscriptionSelf.latestData {
-                        _ = subscriber.receive((output, latestData))
+                        _ = subscriber.receive(resultSelector(output, latestData))
                     }
                     
                     subscriptionSelf.recursiveLock.unlock()
