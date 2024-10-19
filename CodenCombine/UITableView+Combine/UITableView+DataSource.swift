@@ -21,17 +21,7 @@ public extension UITableView {
                 dataSoruceProxy.cellForRowAt = cellBuilder
             } else {
                 dataSoruceProxy = CombineUITableViewDataSourceProxy(
-                    canEditRowAt: nil,
-                    canMoveRowAt: nil,
-                    moveRowAtTo: nil,
-                    commitForRowAt: nil,
-                    titleForHeaderInSection: nil,
-                    titleForFooterInSection: nil,
-                    sectionForSectionIndexTitleAt: nil,
-                    numberOfRowsInSection: nil,
                     cellForRowAt: cellBuilder,
-                    numberOfSections: nil,
-                    sectionIndexTitles: nil,
                     valueAccessiblePublisher: source
                 )
                 self.dataSource = dataSoruceProxy
@@ -70,30 +60,10 @@ final class CombineUITableViewDataSourceProxy<ValueAccessibleSource: ValueAccess
     private let valueAccessiblePublisher: ValueAccessibleSource
     
     init(
-        canEditRowAt: ((UITableView, IndexPath) -> Bool)?,
-        canMoveRowAt: ((UITableView, IndexPath) -> Bool)?,
-        moveRowAtTo: ((UITableView, IndexPath, IndexPath) -> Void)?,
-        commitForRowAt: ((UITableView, UITableViewCell.EditingStyle, IndexPath) -> Void)?,
-        titleForHeaderInSection: ((UITableView, Int) -> String)?,
-        titleForFooterInSection: ((UITableView, Int) -> String)?,
-        sectionForSectionIndexTitleAt: ((UITableView, String, Int) -> Int)?,
-        numberOfRowsInSection: ((UITableView, Int, [Element]) -> Int)?,
         cellForRowAt: @escaping (UITableView, IndexPath, [Element]) -> UITableViewCell,
-        numberOfSections: ((UITableView, [Element]) -> Int)?,
-        sectionIndexTitles: ((UITableView) -> [String])?,
         valueAccessiblePublisher: ValueAccessibleSource
     ) {
-        self.canEditRowAt = canEditRowAt
-        self.canMoveRowAt = canMoveRowAt
-        self.moveRowAtTo = moveRowAtTo
-        self.commitForRowAt = commitForRowAt
-        self.titleForHeaderInSection = titleForHeaderInSection
-        self.titleForFooterInSection = titleForFooterInSection
-        self.sectionForSectionIndexTitleAt = sectionForSectionIndexTitleAt
-        self.numberOfRowsInSection = numberOfRowsInSection
         self.cellForRowAt = cellForRowAt
-        self.numberOfSections = numberOfSections
-        self.sectionIndexTitles = sectionIndexTitles
         self.valueAccessiblePublisher = valueAccessiblePublisher
     }
     
