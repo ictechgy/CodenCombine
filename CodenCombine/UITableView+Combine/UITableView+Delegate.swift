@@ -9,17 +9,17 @@ import UIKit
 import Combine
 
 extension UITableView {
-    public func itemSelected(_ didSelectRowAt: @escaping (UITableView, IndexPath) -> Void) -> Cancellable {
-        let delegateProxy: CombineUITableViewDelegateProxy
+    public func itemSelected<Source: ValueAccessiblePublisher>(with source: Source, _ didSelectRowAt: @escaping (UITableView, IndexPath, Source.Output) -> Void) -> Cancellable {
+        let delegateProxy: CombineUITableViewDelegateProxy<Source>
         
-        if let delegate = self.delegate, type(of: delegate) != CombineUITableViewDelegateProxy.self {
+        if let delegate = self.delegate, type(of: delegate) != CombineUITableViewDelegateProxy<Source>.self {
             fatalError("이미 다른 delegate가 설정되어있습니다.")
             
-        } else if let delegate = self.delegate as? CombineUITableViewDelegateProxy {
+        } else if let delegate = self.delegate as? CombineUITableViewDelegateProxy<Source> {
             delegateProxy = delegate
             delegateProxy.didSelectRowAt = didSelectRowAt
         } else {
-            delegateProxy = CombineUITableViewDelegateProxy()
+            delegateProxy = CombineUITableViewDelegateProxy(valueAccessiblePublisher: source)
             delegateProxy.didSelectRowAt = didSelectRowAt
             self.delegate = delegateProxy
         }
@@ -31,10 +31,15 @@ extension UITableView {
     }
 }
 
-final class CombineUITableViewDelegateProxy: NSObject, UITableViewDelegate {
-    fileprivate var didSelectRowAt: ((UITableView, IndexPath) -> Void)?
+final class CombineUITableViewDelegateProxy<ValueAccessibleSource: ValueAccessiblePublisher>: NSObject, UITableViewDelegate {
+    fileprivate var valueAccessiblePublisher: ValueAccessibleSource
+    fileprivate var didSelectRowAt: ((UITableView, IndexPath, ValueAccessibleSource.Output) -> Void)?
+    
+    init(valueAccessiblePublisher: ValueAccessibleSource) {
+        self.valueAccessiblePublisher = valueAccessiblePublisher
+    }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        didSelectRowAt?(tableView, indexPath)
+        didSelectRowAt?(tableView, indexPath, valueAccessiblePublisher.value)
     }
 }
