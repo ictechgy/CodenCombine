@@ -8,7 +8,15 @@
 import Foundation
 
 final class DefaultNetworkService {
-    func request<ResponseType: Decodable>(by urlRequest: URLRequest, responseType: ResponseType.Type) -> ResponseWrapper<ResponseType> {
-        fatalError()
+    func request<ResponseType: Decodable>(by urlRequest: URLRequest, responseType: ResponseType.Type) async throws -> ResponseWrapper<ResponseType> {
+        let (data, response) = try await URLSession.shared.data(for: urlRequest)
+        
+        if let response = response as? HTTPURLResponse, 200...299 ~= response.statusCode {
+            return try JSONDecoder().decode(ResponseWrapper<ResponseType>.self, from: data)
+        } else if let response = response as? HTTPURLResponse {
+            throw NetworkError.abnormalHTTPStatusCode(code: response.statusCode)
+        } else {
+            throw NetworkError.unknown
+        }
     }
 }
