@@ -6,9 +6,11 @@
 //
 
 struct ResponseWrapper<WrappedData: Decodable>: Decodable {
-    let data: WrappedData
+    let statusCode: Int
+    let data: WrappedData?
     
     enum CodingKeys: String, CodingKey {
+        case statusCode
         case data
     }
 }
