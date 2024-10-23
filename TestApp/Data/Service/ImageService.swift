@@ -10,17 +10,19 @@ import Foundation
 final class DefaultImageService {
     static let defaultConfiguration: URLSessionConfiguration = {
         let configuration = URLSessionConfiguration.default
-        configuration.urlCache = URLCache(memoryCapacity: 1 * 1024 * 1024 * 1, diskCapacity: 1 * 1024 * 1024 * 1)
+        configuration.urlCache = URLCache(memoryCapacity: 1 * 1024 * 1024 * 3, diskCapacity: 1 * 1024 * 1024 * 10)
         
         return configuration
     }()
     
-    func request(by urlString: String, with configuration: URLSessionConfiguration = defaultConfiguration) async throws -> Data {
+    private lazy var imageSession = URLSession(configuration: Self.defaultConfiguration)
+    
+    func request(by urlString: String) async throws -> Data {
         guard let url = URL(string: urlString) else {
             throw NetworkError.invalidURL
         }
         
-        let (data, response) = try await URLSession(configuration: Self.defaultConfiguration).data(from: url)
+        let (data, response) = try await imageSession.data(from: url)
         
         if let response = response as? HTTPURLResponse, 200...299 ~= response.statusCode {
             return data
