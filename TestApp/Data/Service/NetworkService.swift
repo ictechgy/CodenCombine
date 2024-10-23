@@ -7,7 +7,11 @@
 
 import Foundation
 
-final class DefaultNetworkService {
+protocol NetworkService {
+    func request<ResponseType: Decodable>(by urlRequest: URLRequest, responseType: ResponseType.Type) async throws -> ResponseWrapper<ResponseType>
+}
+
+final class DefaultNetworkService: NetworkService {
     func request<ResponseType: Decodable>(by urlRequest: URLRequest, responseType: ResponseType.Type) async throws -> ResponseWrapper<ResponseType> {
         let (data, response) = try await URLSession.shared.data(for: urlRequest)
         
