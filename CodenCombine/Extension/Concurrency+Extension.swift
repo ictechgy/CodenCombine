@@ -17,6 +17,7 @@ public extension Publisher {
     }
 }
 
+// MARK: - MapByTask
 public extension Publishers {
     struct MapByTask<Upstream: Publisher, T>: Publisher where Upstream.Failure == Never {
         public typealias Output = T
@@ -49,6 +50,7 @@ extension Publishers.MapByTask {
     }
 }
 
+// MARK: - MapByCancellableTask
 public extension Publishers {
     struct MapByCancellableTask<Upstream: Publisher, T>: Publisher {
         public typealias Output = T
@@ -65,6 +67,7 @@ public extension Publishers {
     }
 }
 
+// MARK: - MapByCancellableTask - Subscription
 extension Publishers.MapByCancellableTask {
     final class MapByCancellableTaskSubscription<S: Subscriber>: Subscription where S.Input == T {
         private var task: Task<Void, Error>? // upstream element가 단시간에 많이 내려오면 여러개의 task가 실행될 수도 있는거고.. taskList with NSRecursiveLock?
