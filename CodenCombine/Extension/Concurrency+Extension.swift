@@ -5,6 +5,7 @@
 //  Created by JINHONG AN on 10/19/24.
 //
 
+import Foundation
 import Combine
 
 public extension Publisher {
@@ -12,7 +13,9 @@ public extension Publisher {
         Publishers.MapByTask(upstream: self, transform: transform)
     }
     
-    func mapByCancellableTask<T>(_ transform: @escaping (Output) async throws -> T) -> Publishers.MapByCancellableTask<Self, T> {
+    func mapByCancellableTask<T>(
+        _ transform: @escaping (Output) async throws -> T
+    ) -> Publishers.MapByCancellableTask<Self, T> {
         Publishers.MapByCancellableTask(upstream: self, transform: transform)
     }
 }
@@ -69,13 +72,31 @@ public extension Publishers {
 
 // MARK: - MapByCancellableTask - Subscription
 extension Publishers.MapByCancellableTask {
+    actor TaskWarehouse {
+        private var tasks: [UUID: Task<Void, Error>] = [:]
+        
+        func insert(_ task: Task<Void, Error>, identifying uuid: UUID) {
+            tasks[uuid] = task
+        }
+        
+        func removeTask(by uuid: UUID) {
+            tasks[uuid]?.cancel()
+            tasks[uuid] = nil
+        }
+        
+        func removeAll() {
+            tasks.forEach { $1.cancel() }
+            tasks.removeAll(keepingCapacity: false)
+        }
+    }
+    
     final class MapByCancellableTaskSubscription<S: Subscriber>: Subscription where S.Input == T {
-        private var task: Task<Void, Error>? // upstream element가 단시간에 많이 내려오면 여러개의 task가 실행될 수도 있는거고.. taskList with NSRecursiveLock?
-        // 이게 순차적으로 하나씩만 동작되길 원한다면 actor 고려도 해야하고..
+        private let taskWarehouse = TaskWarehouse()
+        // upstream element가 단시간에 많이 내려오면 여러개의 task가 실행될 수도 있는거고.. taskList with NSRecursiveLock?
+        // 이게 순차적으로 하나씩만 동작되길 원한다면 actor 고려도 해야하고.. <- 외부에서 task closure에 부여해야 하는 부분 (global actor)
         // taskGroup / AsyncStream
         // sink / AnySubscriber
         // actor
-        private var cancellable: Cancellable?
         
         init(upstream: Upstream, subscriber: S, transform: @escaping (Upstream.Output) async throws -> T) {
             mapBind(from: upstream, to: subscriber, with: transform)
@@ -86,31 +107,46 @@ extension Publishers.MapByCancellableTask {
         }
         
         func cancel() {
-            cancellable?.cancel()
-            cancellable = nil
+            Task {
+                await taskWarehouse.removeAll()
+            }
         }
     }
 }
 
 extension Publishers.MapByCancellableTask.MapByCancellableTaskSubscription {
-    private func mapBind(from upstream: Upstream, to subscriber: S, with transform: (Upstream.Output) async throws -> T) {
-        
+    private func mapBind(from upstream: Upstream, to subscriber: S, with transform: @escaping (Upstream.Output) async throws -> T) {
+        upstream
+            .withUnretained(self)
+        // TODO: - 
+//            .flatMap {
+//                $0.0.mapInFuture(output: $0.1, transform: transform)
+//            }
+//            .subscribe(subscriber)
     }
     
     private func mapInFuture(output: Upstream.Output, transform: @escaping (Upstream.Output) async throws -> T) -> AnyPublisher<T, Error> {
         Future { promise in
-            Task { [promise] in
-                do {
-                    try Task.checkCancellation()
-                    
-                    let result = try await transform(output)
-                    
-                    try Task.checkCancellation()
-                    
-                    promise(.success(result))
-                } catch {
-                    promise(.failure(error))
-                }
+            Task {
+                let id = UUID()
+                await self.taskWarehouse.insert(
+                    Task { [promise] in
+                        do {
+                            try Task.checkCancellation()
+                            
+                            let result = try await transform(output)
+                            
+                            try Task.checkCancellation()
+                            
+                            promise(.success(result))
+                        } catch {
+                            promise(.failure(error))
+                        }
+                        
+                        await self.taskWarehouse.removeTask(by: id)
+                    },
+                    identifying: id
+                )
             }
         }
         .eraseToAnyPublisher()
