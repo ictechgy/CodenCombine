@@ -55,7 +55,7 @@ extension Publishers.MapByTask {
 
 // MARK: - MapByCancellableTask
 public extension Publishers {
-    struct MapByCancellableTask<Upstream: Publisher, T>: Publisher {
+    struct MapByCancellableTask<Upstream: Publisher, T>: Publisher where Upstream.Failure == Error {
         public typealias Output = T
         public typealias Failure = Error
         
@@ -98,8 +98,13 @@ extension Publishers.MapByCancellableTask {
         // sink / AnySubscriber
         // actor
         
-        init(upstream: Upstream, subscriber: S, transform: @escaping (Upstream.Output) async throws -> T) {
-            mapBind(from: upstream, to: subscriber, with: transform)
+        init(upstream: Upstream, subscriber: S, transform: @escaping (Upstream.Output) async throws -> T) where Upstream.Failure == S.Failure {
+            upstream
+                .withUnretained(self)
+                .flatMap { subscription, output in
+                    subscription.mapInFuture(output: output, transform: transform)
+                }
+                .subscribe(subscriber)
         }
         
         func request(_ demand: Subscribers.Demand) {
@@ -115,16 +120,6 @@ extension Publishers.MapByCancellableTask {
 }
 
 extension Publishers.MapByCancellableTask.MapByCancellableTaskSubscription {
-    private func mapBind(from upstream: Upstream, to subscriber: S, with transform: @escaping (Upstream.Output) async throws -> T) {
-        upstream
-            .withUnretained(self)
-        // TODO: - 
-//            .flatMap {
-//                $0.0.mapInFuture(output: $0.1, transform: transform)
-//            }
-//            .subscribe(subscriber)
-    }
-    
     private func mapInFuture(output: Upstream.Output, transform: @escaping (Upstream.Output) async throws -> T) -> AnyPublisher<T, Error> {
         Future { promise in
             Task {
