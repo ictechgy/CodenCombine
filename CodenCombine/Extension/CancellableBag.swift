@@ -21,7 +21,7 @@ public final class CancellableBag {
     private var isCancelled = false
     private let lock = NSRecursiveLock()
     
-    func insert(_ cancellable: Cancellable) {
+    public func insert(_ cancellable: Cancellable) {
         self._insert(cancellable)?.cancel()
     }
     
@@ -38,7 +38,7 @@ public final class CancellableBag {
         }
     }
     
-    func cancel() {
+    private func cancel() {
         self._cancel().forEach { $0.cancel() }
     }
     
