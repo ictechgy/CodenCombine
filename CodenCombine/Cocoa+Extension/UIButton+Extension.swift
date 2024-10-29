@@ -26,4 +26,10 @@ extension CombineReactive where Base: UIButton {
             button.setBackgroundImage(image, for: controlState)
         }
     }
+    
+    public func attributedTitle(for controlState: UIControl.State = []) -> Binder<NSAttributedString?> {
+        return Binder(self.base) { button, attributedTitle -> Void in
+            button.setAttributedTitle(attributedTitle, for: controlState)
+        }
+    }
 }
