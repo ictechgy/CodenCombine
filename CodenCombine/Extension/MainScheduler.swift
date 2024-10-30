@@ -12,6 +12,7 @@ public struct MainScheduler: Scheduler {
     public typealias SchedulerTimeType = DispatchQueue.SchedulerTimeType
     public typealias SchedulerOptions = DispatchQueue.SchedulerOptions
     
+    /// instance 사용 시 현재 쓰레드가 메인쓰레드라면 동기적으로 작업 수행, 그렇지 않다면 비동기적으로 작업 수행
     public static let instance = MainScheduler(alwaysAync: false)
     public static let asyncInstance = MainScheduler(alwaysAync: true)
     
@@ -32,6 +33,7 @@ public struct MainScheduler: Scheduler {
     
     public func schedule(options: DispatchQueue.SchedulerOptions?, _ action: @escaping () -> Void) {
         if DispatchQueue.isCurrentQueueMain && alwaysAync == false && lock.try() {
+            // TODO: - 무한 재귀 고려 필요
             action()
             lock.unlock()
         } else {

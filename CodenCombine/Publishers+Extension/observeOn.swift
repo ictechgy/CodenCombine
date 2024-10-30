@@ -52,6 +52,7 @@ extension Publishers.ObserveOn {
         
         func receive(_ input: Upstream.Output) -> Subscribers.Demand {
             if dispatchQueue.id == DispatchQueue.currentRunningQueueId, lock.try() {
+                // TODO: - 무한 재귀 고려 필요
                 _ = downstream.receive(input)
                 lock.unlock()
             } else {
