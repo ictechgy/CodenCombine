@@ -9,10 +9,12 @@ import Foundation
 import Combine
 
 public extension Publisher {
-    func mapByTask<T>(_ transform: @escaping (Output) async throws -> T) -> Publishers.MapByTask<Self, T> where Self.Failure == Never {
+    /// cancellable이 cancel되어도 진행중이던 task들이 cancel되지 않는 map
+    func mapByTask<T>(_ transform: @escaping (Output) async throws -> T) -> Publishers.MapByTask<Self, T> {
         Publishers.MapByTask(upstream: self, transform: transform)
     }
     
+    /// cancellable이 cancel되면 진행중이던 task들이 cancel되는 map
     func mapByCancellableTask<T>(
         _ transform: @escaping (Output) async throws -> T
     ) -> Publishers.MapByCancellableTask<Self, T> {
