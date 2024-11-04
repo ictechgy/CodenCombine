@@ -8,7 +8,7 @@
 import UIKit
 import Combine
 
-final class ControlTarget: Cancellable {
+final class ControlTarget: Subscription {
     typealias Callback = (UIControl) -> Void
 
     private var callback: Callback?
@@ -25,6 +25,10 @@ final class ControlTarget: Cancellable {
 
     @objc private func eventHandler(_ sender: UIControl) {
         callback?(sender)
+    }
+    
+    func request(_ demand: Subscribers.Demand) {
+        // unlimited
     }
     
     func cancel() {
