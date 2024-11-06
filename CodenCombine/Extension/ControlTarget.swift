@@ -12,6 +12,7 @@ final class ControlTarget<Output, S: Subscriber>: Subscription where S.Input == 
     typealias Callback = (UIControl) -> Output
     private var callback: Callback?
     private var subscriber: S?
+    private let scheduler = MainScheduler.instance
     
     init(
         control: UIControl,
@@ -31,7 +32,9 @@ final class ControlTarget<Output, S: Subscriber>: Subscription where S.Input == 
 
     @objc private func eventHandler(_ sender: UIControl) {
         guard let output = callback?(sender) else { return }
-        _ = subscriber?.receive(output) // unlimited
+        scheduler.schedule {
+            _ = self.subscriber?.receive(output) // unlimited
+        }
     }
     
     func request(_ demand: Subscribers.Demand) {
