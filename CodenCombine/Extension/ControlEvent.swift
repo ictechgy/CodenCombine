@@ -8,6 +8,7 @@
 import UIKit
 import Combine
 
+/// RxSwift의 ControlEvent와는 조금 다르게 Subscription 생성을 내부 캡슐화하고 메인쓰레드는 ControlTarget 내부에서 보장
 public struct ControlEvent<PropertyType> : Publisher {
     public typealias Output = PropertyType
     public typealias Failure = Never
