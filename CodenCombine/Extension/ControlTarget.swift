@@ -8,6 +8,7 @@
 import UIKit
 import Combine
 
+/// RxSwift의 ControlTarget에 ControlEvent의 메인쓰레드 보장과 (Subscriber로의) element 직접 전송을 합친 형태
 final class ControlTarget<Output, S: Subscriber>: Subscription where S.Input == Output, S.Failure == Never {
     typealias Callback = (UIControl) -> Output
     private var callback: Callback?
