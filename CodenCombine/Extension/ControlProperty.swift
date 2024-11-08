@@ -23,6 +23,7 @@ public struct ControlProperty<PropertyType>: Publisher, Subscriber {
     }
     
     public func receive<S>(subscriber: S) where S : Subscriber, Failure == S.Failure, Output == S.Input {
+        // TODO: 여기서 ControlTarget Subscription 캡슐화를 하는건 어떨까?
         outbound.receive(subscriber: subscriber)
     }
     
