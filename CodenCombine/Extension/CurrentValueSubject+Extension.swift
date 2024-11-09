@@ -7,16 +7,19 @@
 
 import Combine
 
+/// value에 접근 가능한 publisher 추상화
 public protocol ValueAccessiblePublisher where Self: Publisher {
     var value: Output { get }
 }
 
 extension CurrentValueSubject: ValueAccessiblePublisher {
+    /// value에 접근 가능한 AnyPublisher로 변환
     public func eraseToValueAccessibleAnyPublisher() -> ValueAccessibleAnyPublisher<CurrentValueSubject> {
         ValueAccessibleAnyPublisher(wrappedPublisher: self)
     }
 }
 
+/// ``eraseToAnyPublisher()`` 의 value 접근 가능 버전
 public struct ValueAccessibleAnyPublisher<Wrapped: ValueAccessiblePublisher>: Publisher {
     public typealias Output = Wrapped.Output
     public typealias Failure = Wrapped.Failure
@@ -36,4 +39,5 @@ public struct ValueAccessibleAnyPublisher<Wrapped: ValueAccessiblePublisher>: Pu
     }
 }
 
+// ValueAccessibleAnyPublisher는 그 자체로 `ValueAccessiblePublisher`
 extension ValueAccessibleAnyPublisher: ValueAccessiblePublisher { }
