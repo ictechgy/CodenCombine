@@ -9,12 +9,18 @@ import Combine
 import Foundation
 
 public extension Publisher {
+    /// origin upstream의 element가 방출되었을 때 다른 stream의 맨 마지막 값을 가져와 downstream으로 전송합니다.
+    /// 단, 다른 stream에 element가 전송된 적 없다면 origin upstream의 element가 수없이 방출되어도 downstream로는 아무것도 전달되지 않습니다.
+    /// 이 함수는 두 stream의 element를 같이 downstream으로 전송합니다.
     func withLatestFrom<AnotherUpstream>(_ anotherUpstream: AnotherUpstream) -> Publishers.WithLatestFrom<Self, AnotherUpstream, (Output, AnotherUpstream.Output)> where AnotherUpstream: Publisher, Failure == AnotherUpstream.Failure {
         Publishers.WithLatestFrom(upstream: self, anotherUpstream: anotherUpstream) {
             ($0, $1)
         }
     }
     
+    /// origin upstream의 element가 방출되었을 때 다른 stream의 맨 마지막 값을 가져와 downstream으로 전송합니다.
+    /// 단, 다른 stream에 element가 전송된 적 없다면 origin upstream의 element가 수없이 방출되어도 downstream로는 아무것도 전달되지 않습니다.
+    /// 이 함수는 두 stream의 element를 어떻게 downstream으로 전송할지 결정해야 합니다.
     func withLatestFrom<AnotherUpstream, FinalOutput>(_ anotherUpstream: AnotherUpstream, _ resultSelector: @escaping (Output, AnotherUpstream.Output) -> FinalOutput) -> Publishers.WithLatestFrom<Self, AnotherUpstream, FinalOutput> where AnotherUpstream: Publisher, Failure == AnotherUpstream.Failure {
         Publishers.WithLatestFrom(upstream: self, anotherUpstream: anotherUpstream, resultSelector: resultSelector)
     }
