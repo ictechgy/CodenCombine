@@ -7,6 +7,7 @@
 
 import Foundation
 
+// 현재 실행중인 DispatchQueue context를 알아내기 위한 extension
 extension DispatchQueue {
     private static let defaultKey = DispatchSpecificKey<UUID>()
     
