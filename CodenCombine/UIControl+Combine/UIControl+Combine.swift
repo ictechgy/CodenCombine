@@ -34,4 +34,16 @@ public extension CombineReactive where Base: UIControl {
 
         return ControlProperty<T>(outbound: source, inbound: binder)
     }
+    
+    internal func controlPropertyWithDefaultEvents<T>(
+        editingEvents: UIControl.Event = [.allEditingEvents, .valueChanged],
+        getter: @escaping (Base) -> T,
+        setter: @escaping (Base, T) -> Void
+        ) -> ControlProperty<T> {
+        return controlProperty(
+            editingEvents: editingEvents,
+            getter: getter,
+            setter: setter
+        )
+    }
 }
