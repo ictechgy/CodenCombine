@@ -9,6 +9,12 @@ import UIKit
 import Combine
 
 public extension CombineReactive where Base: UIButton {
+    var tap: ControlEvent<Void> {
+        controlEvent(.touchUpInside)
+    }
+}
+
+public extension CombineReactive where Base: UIButton {
     func title(for controlState: UIControl.State = []) -> Binder<String?> {
         Binder(self.base) { button, title in
             button.setTitle(title, for: controlState)
