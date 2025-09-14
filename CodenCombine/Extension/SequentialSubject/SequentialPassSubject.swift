@@ -9,9 +9,9 @@ import Combine
 
 /// 데이터를 순차적으로 발송하는 Subject
 /// PassThroughSubject 성격
-public final class SequentialPassSubject<Element, Failure: Error>: Publisher {
+public final class SequentialPassSubject<Element>: Publisher {
     public typealias Output = SequentialEvent<Element>
-    public typealias Failure = Failure
+    public typealias Failure = SequentialEventError
     
     private var conveyorStream: AsyncThrowingStream<Element, Error>?
     private var conveyorStreamContinuation: AsyncThrowingStream<Element, Error>.Continuation?
@@ -81,7 +81,7 @@ extension SequentialPassSubject.SequentialPassSubscription {
         Task {
             do {
                 for try await event in conveyorStream {
-                    await withUnsafeContinuation { (continuation: UnsafeContinuation<Void, Never>) in
+                    try await withUnsafeThrowingContinuation { (continuation: UnsafeContinuation<Void, Error>) in
                         let notification = ConsumptionNotification(continuation: continuation)
                         let event = SequentialEvent(
                             element: event,
@@ -91,9 +91,10 @@ extension SequentialPassSubject.SequentialPassSubscription {
                     }
                 }
                 subscriber?.receive(completion: .finished)
+            } catch SequentialEventError.unexpectedlyTerminated {
+                subscriber?.receive(completion: .failure(SequentialEventError.unexpectedlyTerminated))
             } catch {
-                guard let error = error as? Failure else { return }
-                subscriber?.receive(completion: .failure(error))
+                subscriber?.receive(completion: .failure(.thrown(error: error)))
             }
         }
     }

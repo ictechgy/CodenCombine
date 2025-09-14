@@ -6,20 +6,34 @@
 //
 
 public protocol ConsumptionInformable {
-    /// 데이터가 소비되었음을 알림
-    func notifyEventConsumed() async
+    /// element가 소비되었음을 알림
+    func notifyElementConsumed() async
+}
+
+public enum SequentialEventError: Error {
+    /// element가 소비되지 않은 상태로 수신부가 비정상 종료된 경우 생기는 에러
+    case unexpectedlyTerminated
+    /// 일반적인 에러
+    case thrown(error: Error)
 }
 
 actor ConsumptionNotification: ConsumptionInformable {
-    private var continuation: UnsafeContinuation<Void, Never>?
+    private var continuation: UnsafeContinuation<Void, Error>?
     
-    init(continuation: UnsafeContinuation<Void, Never>) {
+    init(continuation: UnsafeContinuation<Void, Error>) {
         self.continuation = continuation
     }
     
-    func notifyEventConsumed() {
+    func notifyElementConsumed() {
         self.continuation?.resume(with: .success(()))
         self.continuation = nil
+    }
+    
+    deinit {
+        if self.continuation != nil {
+            self.continuation?.resume(throwing: SequentialEventError.unexpectedlyTerminated)
+            self.continuation = nil
+        }
     }
 }
 
