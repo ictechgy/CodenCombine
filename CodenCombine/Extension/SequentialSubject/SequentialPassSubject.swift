@@ -90,6 +90,7 @@ extension SequentialPassSubject.SequentialPassSubscription {
                         _ = subscriber?.receive(event)
                     }
                 }
+                subscriber?.receive(completion: .finished)
             } catch {
                 guard let error = error as? Failure else { return }
                 subscriber?.receive(completion: .failure(error))
