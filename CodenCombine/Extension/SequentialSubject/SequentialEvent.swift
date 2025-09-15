@@ -14,7 +14,7 @@ public enum SequentialEventError: Error {
     /// element가 소비되지 않은 상태로 수신부가 비정상 종료된 경우 생기는 에러
     case unexpectedlyTerminated
     /// 일반적인 에러
-    case thrown(error: Error)
+    case thrown(error: Error) // TODO: Error 제네릭
 }
 
 actor ConsumptionNotification: ConsumptionInformable {

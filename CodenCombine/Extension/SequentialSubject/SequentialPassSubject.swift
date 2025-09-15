@@ -9,8 +9,9 @@ import Combine
 
 /// 데이터를 순차적으로 발송하는 Subject
 /// PassThroughSubject 성격
-public final class SequentialPassSubject<Element>: Publisher {
+public final class SequentialPassSubject<Element>: Publisher { // TODO: Publisher가 아닌 별도 프로토콜 만들어서 Subject처럼 몇가지 기본 함수 정의
     public typealias Output = SequentialEvent<Element>
+    // TODO: 가능하다면 Failure를 SequentialEventError의 제네릭으로 주입 가능하도록 수정
     public typealias Failure = SequentialEventError
     
     private var conveyorStream: AsyncThrowingStream<Element, Error>?
